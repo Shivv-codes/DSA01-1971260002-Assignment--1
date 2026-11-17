@@ -217,6 +217,27 @@ When a Boolean value is printed normally, it appears as 1 for `true` and 0 for `
 
 These conversion rules must be considered carefully to prevent unexpected results in fare calculations and balance validation.
 
+### 5.4 Mixed Expression Using int, double and bool
+
+The following example demonstrates how C++ handles all three data types in one arithmetic expression.
+
+```cpp
+int journeys = 2;
+double fare = 10.5;
+bool peakHour = true;
+
+double total = journeys + fare + peakHour;
+
+cout << total << endl;
+```
+
+**Output:**
+```text
+13.5
+```
+
+**Explanation:** The Boolean value `true` is promoted to integer value `1`. The integer operands are then converted to `double` during the arithmetic operation. Therefore, the result is 2 + 10.5 + 1 = 13.5.
+
 ## 6. Integer Ranges and Daily Collection Analysis
 
 The `<climits>` header provides the limits of integer data types.
@@ -363,10 +384,10 @@ The final observed results were:
 | Measurement | Actual Result |
 |---|---:|
 | Number of additions | 10,000,000 |
-| Double total | Rs. 999,999.9998383975 |
+| Double total | Rs. 999,999.9998383975375 |
 | Integer total | 100,000,000 paise |
-| Exact total | Rs. 1,000,000.00 |
-| Absolute rounding error | Approximately Rs. 0.0001616025 |
+| Exact total | Rs. 1,000,000.0000000000000 |
+| Absolute rounding error | Rs. 0.00016102462541312 |
 
 The measured absolute errors at the intermediate checkpoints were:
 
@@ -374,14 +395,14 @@ The measured absolute errors at the intermediate checkpoints were:
 |---:|---:|
 | 1 | 0 |
 | 10 | 1.110223 × 10⁻¹⁶ |
-| 100 | 9.059093 × 10⁻¹⁴ |
+| 100 | 1.953993 × 10⁻¹⁴ |
 | 1,000 | 1.406875 × 10⁻¹² |
 | 10,000 | 1.588205 × 10⁻¹⁰ |
 | 100,000 | 1.884837 × 10⁻⁸ |
 | 1,000,000 | 1.332883 × 10⁻⁶ |
 | 10,000,000 | 1.610246 × 10⁻⁴ |
 
-The experiment demonstrates that repeated floating-point addition can accumulate a measurable rounding error. In contrast, integer-paise addition produces the exact total for this test.
+The experiment demonstrates that repeated floating-point addition can accumulate measurable rounding error. In contrast, integer-paise addition produces the exact total for this test.
 
 The absolute error generally increases as additions accumulate, although it need not increase monotonically at every checkpoint.
 
@@ -392,6 +413,8 @@ The absolute error generally increases as additions accumulate, although it need
 - `evidence/precision-test-code1.png`
 - `evidence/precision-test-code2.png`
 - `evidence/precision-test-code3.png`
+
+**Execution output:** `evidence/precision-output.png`
 
 ![Precision test source code – Part 1](evidence/precision-test-code1.png)
 
