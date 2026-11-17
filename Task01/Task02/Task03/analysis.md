@@ -13,12 +13,12 @@ The data types are selected based on the nature of each value, its expected rang
 | Fare amount | `long long` | Stores monetary values as integer paise without floating-point rounding errors. |
 | Smart-card balance | `long long` | Supports accurate additions and deductions and provides a large range. |
 | Peak-hour status | `bool` | Represents whether a journey occurs during peak hours (`true` or `false`). |
-| Passenger category code | `char` | Can store a single-character category code, if required. |
+| Passenger category | `enum class` | Represents named categories such as Regular, Student and Senior Citizen safely. |
 | Journey hour and minute | `int` | Suitable for storing whole-number time components. |
-| Zone number | `int` | Stores numerical zone identifiers. An `enum class` can alternatively represent named zones. |
+| Zone number | `enum class` | Represents named zones clearly and prevents accidental mixing with unrelated integers. |
 | Journey count | `unsigned long long` | Represents large non-negative journey counts. |
 | Concession percentage | `int` | Stores a whole-number percentage. |
-| Approximate calculations | `float` | Suitable for calculations where lower floating-point precision is acceptable. |
+| Approximate calculations | `float` | Suitable for calculations where lower floating-point precision is acceptable; not recommended for fare storage. |
 | Display and measurement calculations | `double` | Provides greater floating-point precision than `float`. |
 | Automatically deduced values | `auto` | Allows the compiler to determine the variable type from its initial value. |
 
@@ -30,13 +30,13 @@ auto baseFare = 1000LL;
 
 The compiler deduces `baseFare` as `long long`.
 
-For passenger categories with multiple named values, an `enum class` is preferable to using arbitrary character codes because it provides clearer and safer category representation.
+For passenger categories and zones, `enum class` is preferable to arbitrary numerical or character codes because it provides clearer and type-safe representation.
 
 ## 3. Data Type Sizes and Integer Ranges
 
 The `sizeof` operator determines the memory occupied by a data type on the system. The `<climits>` header provides the minimum and maximum limits of integer types.
 
-The following program measures the sizes and ranges on the actual compiler being used.
+The following program measures the sizes and ranges using the actual compiler.
 
 ### Program: data_types.cpp
 
@@ -76,7 +76,7 @@ int main()
 
 ### 3.1 Typical Sizes and Ranges
 
-The following are common values on modern systems. The actual results must be verified using the program above.
+The following are common values on modern systems. Actual results must be verified using the program above.
 
 | Data Type | Typical Size | Typical Range or Precision |
 |---|---:|---|
@@ -89,28 +89,62 @@ The following are common values on modern systems. The actual results must be ve
 | `float` | 4 bytes | Approximately 6–7 significant decimal digits |
 | `double` | 8 bytes | Approximately 15–16 significant decimal digits |
 
-The sizes shown are typical implementation values, not universal guarantees. The program's output is the evidence for the system used.
+The sizes shown are typical implementation values, not universal guarantees. The actual program output is the evidence for the system used.
+
+### 3.2 Actual Compiler Results
+
+The program was successfully compiled and executed using GCC 16.2.0 on Windows.
+
+The observed results were:
+
+| Data Type | Measured Size |
+|---|---:|
+| `bool` | 1 byte |
+| `char` | 1 byte |
+| `int` | 4 bytes |
+| `unsigned int` | 4 bytes |
+| `long long` | 8 bytes |
+| `unsigned long long` | 8 bytes |
+| `float` | 4 bytes |
+| `double` | 8 bytes |
+
+The observed integer limits were:
+
+| Constant | Measured Value |
+|---|---:|
+| `CHAR_MIN` | -128 |
+| `CHAR_MAX` | 127 |
+| `INT_MIN` | -2147483648 |
+| `INT_MAX` | 2147483647 |
+| `UINT_MAX` | 4294967295 |
+| `LLONG_MIN` | -9223372036854775808 |
+| `LLONG_MAX` | 9223372036854775807 |
+| `ULLONG_MAX` | 18446744073709551615 |
 
 ### Evidence 1 – Data Type Sizes and Ranges
 
-Insert the actual screenshot of the successfully executed `data_types.cpp` program here.
+**Source code:** `evidence/data_types-code.png`
 
-**Screenshot:** `evidence/sizeof-output.png`
+![Data type source code](evidence/data_types-code.png)
+
+**Execution output:** `evidence/sizeof-output.png`
+
+![Data type execution output](evidence/sizeof-output.png)
 
 ## 4. Why Money Should Be Stored in Integer Paise Instead of Double Rupees
 
 Money should be represented using integer paise rather than `double` rupees because floating-point numbers cannot represent every decimal fraction exactly in binary.
 
-For example, a value such as ₹0.10 may be stored as a nearby binary approximation. Repeated additions can therefore introduce small rounding errors.
+For example, a value such as Rs. 0.10 may be stored as a nearby binary approximation. Repeated additions can therefore introduce small rounding errors.
 
 Storing money as integer paise avoids this problem for whole-paise transactions.
 
 Examples:
 
-- ₹10 = 1,000 paise
-- ₹20 = 2,000 paise
-- ₹30 = 3,000 paise
-- ₹36 = 3,600 paise
+- Rs. 10 = 1,000 paise
+- Rs. 20 = 2,000 paise
+- Rs. 30 = 3,000 paise
+- Rs. 36 = 3,600 paise
 
 Advantages of integer-paise representation:
 
@@ -187,28 +221,28 @@ These conversion rules must be considered carefully to prevent unexpected result
 
 The `<climits>` header provides the limits of integer data types.
 
-For a typical system with a 32-bit signed `int`:
+For the 32-bit signed `int` used by the compiler:
 
 - `INT_MIN` = -2,147,483,648
 - `INT_MAX` = 2,147,483,647
 
 The metro network is expected to grow to 3,000,000 journeys per day.
 
-The maximum base fare is ₹30. During peak hours, a 20% surcharge applies.
+The maximum base fare is Rs. 30. During peak hours, a 20% surcharge applies.
 
 Maximum fare before concessions:
 
-₹30 + 20% of ₹30 = ₹36
+Rs. 30 + 20% of Rs. 30 = Rs. 36
 
 Maximum daily collection:
 
-3,000,000 × ₹36 = ₹108,000,000
+3,000,000 × Rs. 36 = Rs. 108,000,000
 
 Converting this amount into paise:
 
-₹108,000,000 × 100 = 10,800,000,000 paise
+Rs. 108,000,000 × 100 = 10,800,000,000 paise
 
-This exceeds the typical maximum value of a 32-bit signed integer, which is 2,147,483,647.
+This exceeds the maximum value of a 32-bit signed integer, which is 2,147,483,647.
 
 Therefore, `int` is insufficient to store the maximum possible daily collection in paise. Using `long long` resolves this overflow problem because it supports a much larger range.
 
@@ -227,7 +261,7 @@ An alternative solution is to store monetary values using `double` in rupees ins
 | Monetary precision | Approximate | Exact for whole-paise values |
 | Rounding error | Possible | No floating-point rounding error |
 
-Both methods have constant-time addition, O(1), and typically use 8 bytes per value on common modern systems.
+Both methods have constant-time addition, O(1), and typically use 8 bytes per value on the tested system.
 
 However, `double` uses approximate binary floating-point representation. Repeated additions can accumulate rounding differences.
 
@@ -242,47 +276,66 @@ The following program compares repeated addition using `double` with integer-pai
 ```cpp
 #include <iostream>
 #include <iomanip>
+#include <cmath>
 using namespace std;
 
 int main()
 {
     const int N = 10000000;
 
+    const int checkpoints[] = {
+        1, 10, 100, 1000, 10000,
+        100000, 1000000, 10000000
+    };
+
+    const int totalCheckpoints = 8;
+
     double doubleTotal = 0.0;
     long long paiseTotal = 0;
 
-    int checkpoints[] = {1000, 100000, 1000000, 10000000};
-    int nextCheckpoint = 0;
+    int checkpointIndex = 0;
+
+    cout << "FLOATING-POINT PRECISION TEST" << endl;
+    cout << "Adding Rs. 0.10 repeatedly" << endl;
 
     cout << fixed << setprecision(12);
-    cout << "NUMBER OF ADDITIONS | ABSOLUTE ERROR" << endl;
+
+    cout << "\nNumber of additions"
+         << "\tDouble total (Rs.)"
+         << "\tInteger total (Rs.)"
+         << "\tAbsolute error (Rs.)" << endl;
 
     for (int i = 1; i <= N; i++)
     {
         doubleTotal += 0.10;
         paiseTotal += 10;
 
-        if (i == checkpoints[nextCheckpoint])
+        if (i == checkpoints[checkpointIndex])
         {
-            double exactRupees =
+            double exactTotal =
                 static_cast<double>(paiseTotal) / 100.0;
 
-            double error = doubleTotal - exactRupees;
+            double error = fabs(doubleTotal - exactTotal);
 
-            if (error < 0)
-                error = -error;
+            cout << i << "\t\t"
+                 << doubleTotal << "\t"
+                 << exactTotal << "\t"
+                 << scientific << setprecision(6)
+                 << error << fixed << setprecision(12)
+                 << endl;
 
-            cout << i << " | " << error << endl;
+            checkpointIndex++;
 
-            nextCheckpoint++;
+            if (checkpointIndex == totalCheckpoints)
+                break;
         }
     }
 
-    cout << "\nFinal double total: "
-         << setprecision(17) << doubleTotal << endl;
-
-    cout << "Exact integer-paise total: "
-         << paiseTotal << " paise" << endl;
+    cout << "\nFINAL RESULTS" << endl;
+    cout << "Double total (Rs.): " << doubleTotal << endl;
+    cout << "Integer total (paise): " << paiseTotal << endl;
+    cout << "Exact total (Rs.): "
+         << static_cast<double>(paiseTotal) / 100.0 << endl;
 
     return 0;
 }
@@ -290,20 +343,65 @@ int main()
 
 ### 8.1 Explanation of the Experiment
 
-The program adds ₹0.10 repeatedly using two methods:
+The program adds Rs. 0.10 repeatedly using two methods:
 
 - `doubleTotal` stores the accumulated amount as a floating-point value.
 - `paiseTotal` stores each transaction as 10 integer paise.
 
 The expected exact total is calculated from the integer-paise value. At each checkpoint, the absolute difference between the two totals is measured.
 
-The actual measured errors must be recorded from the compiler output. Floating-point error does not necessarily increase monotonically at every checkpoint, so the measured values should be reported rather than assumed.
+The actual measured errors are recorded from the compiler output. Floating-point error does not necessarily increase monotonically at every checkpoint, so measured values should be reported rather than assumed.
+
+### 8.2 Actual Experimental Results
+
+The program was successfully compiled and executed using GCC 16.2.0 on Windows.
+
+A total of 10,000,000 additions of Rs. 0.10 were performed using both methods.
+
+The final observed results were:
+
+| Measurement | Actual Result |
+|---|---:|
+| Number of additions | 10,000,000 |
+| Double total | Rs. 999,999.9998383975 |
+| Integer total | 100,000,000 paise |
+| Exact total | Rs. 1,000,000.00 |
+| Absolute rounding error | Approximately Rs. 0.0001616025 |
+
+The measured absolute errors at the intermediate checkpoints were:
+
+| Number of Additions | Measured Absolute Error (Rs.) |
+|---:|---:|
+| 1 | 0 |
+| 10 | 1.110223 × 10⁻¹⁶ |
+| 100 | 9.059093 × 10⁻¹⁴ |
+| 1,000 | 1.406875 × 10⁻¹² |
+| 10,000 | 1.588205 × 10⁻¹⁰ |
+| 100,000 | 1.884837 × 10⁻⁸ |
+| 1,000,000 | 1.332883 × 10⁻⁶ |
+| 10,000,000 | 1.610246 × 10⁻⁴ |
+
+The experiment demonstrates that repeated floating-point addition can accumulate a measurable rounding error. In contrast, integer-paise addition produces the exact total for this test.
+
+The absolute error generally increases as additions accumulate, although it need not increase monotonically at every checkpoint.
 
 ### Evidence 2 – Precision Comparison
 
-Insert the actual screenshot of the successfully executed `precision_test.cpp` program here.
+**Source code screenshots:**
 
-**Screenshot:** `evidence/precision-output.png`
+- `evidence/precision-test-code1.png`
+- `evidence/precision-test-code2.png`
+- `evidence/precision-test-code3.png`
+
+![Precision test source code – Part 1](evidence/precision-test-code1.png)
+
+![Precision test source code – Part 2](evidence/precision-test-code2.png)
+
+![Precision test source code – Part 3](evidence/precision-test-code3.png)
+
+**Execution output:** `evidence/precision-output.png`
+
+![Precision test execution output](evidence/precision-output.png)
 
 ## 9. Conclusion
 
