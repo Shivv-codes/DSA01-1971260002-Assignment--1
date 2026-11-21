@@ -1,99 +1,54 @@
-# Task 9 – Implement and Test the Fare Logic
+# Task 10 – Compare Expectations with Execution
 
 **Marks: 4**
 
-## 1. C++ Implementation
+## 1. Network Total Calculations
 
-The program uses integer paise to avoid floating-point errors. Peak hours are 8:00–10:00 AM and 5:00–8:00 PM. A journey is accepted only if at least ₹50 remains after deducting the fare.
+The base fare is assumed to be ₹10 per journey for this comparison.
 
-```cpp
-#include <iostream>
-#include <iomanip>
-#include <string>
-#include <sstream>
-using namespace std;
+| Journeys per day | Total in rupees | Total in paise | Fits 32-bit signed `int`? |
+|---:|---:|---:|---|
+| 20,000 | ₹2,00,000 | 20,000,000 | Yes |
+| 5,00,000 | ₹50,00,000 | 500,000,000 | Yes |
+| 30,00,000 | ₹3,00,00,000 | 3,000,000,000 | No |
 
-const long long MIN_BALANCE = 5000;
+The integer-paise and double-rupee totals agree for this ₹10 example because the values are exactly representable at these magnitudes. However, floating-point calculations involving decimal fractions can produce small rounding differences.
 
-long long getFare(int zone, int hour) {
-    if (hour < 0 || hour > 23) return -1;
+For example, repeatedly adding ₹0.10 using `double` may produce a slightly different result from the exact integer-paise total.
 
-    long long fare;
-    switch (zone) {
-        case 1: fare = 1000; break;
-        case 2: fare = 2000; break;
-        case 3: fare = 3000; break;
-        default: return -1;
-    }
+## 2. Integer Overflow
 
-    bool peak = (hour >= 8 && hour < 10) ||
-                (hour >= 17 && hour < 20);
+A typical 32-bit signed `int` has a maximum value of 2,147,483,647.
 
-    if (peak) fare += fare * 20 / 100;
-    return fare;
-}
+At 30,00,000 journeys, the total is 3,000,000,000 paise, which exceeds this limit. Therefore, an `int` accumulator can overflow. Signed integer overflow in C++ causes undefined behaviour.
 
-bool travel(int zone, int hour, long long balance,
-            long long &fare) {
-    fare = getFare(zone, hour);
+A `long long` accumulator can safely store this total.
 
-    if (fare < 0 || balance - fare < MIN_BALANCE)
-        return false;
+## 3. Compiler Warnings
 
-    return true;
-}
+The program can be compiled using:
 
-bool recharge(long long &balance, long long amount) {
-    if (amount < 0) return false;
-    balance += amount;
-    return true;
-}
+```bash
+g++ -std=c++17 -Wall -Wextra -Wconversion -pedantic main.cpp -o fare
+```
 
-int main() {
-    cout << fixed << setprecision(2);
+- `-Wall`: Enables a broad set of common compiler warnings.
+- `-Wextra`: Enables additional warnings.
+- `-Wconversion`: Detects potentially value-changing implicit conversions.
+- `-pedantic`: Reports non-standard language extensions.
 
-    cout << "FARE TEST RESULTS\n";
-    cout << "Zone  Hour  Balance  Fare  Result\n";
+The exact warnings depend on the source code and compiler version. The final demonstration program compiled successfully; no warning messages should be invented. Any warnings from the actual build should be recorded exactly.
 
-    int zones[] = {1, 2, 3, 1, 2, 1, 1, 1};
-    int hours[] = {9, 14, 17, 10, 20, 8, 10, 14};
-    long long balances[] = {
-        20000, 20000, 20000, 20000,
-        20000, 6200, 20000, 20000
-    };
+## 4. Alternative Concept – Accumulator Comparison
 
-    long long fare;
+| Data type | Result at 30,00,000 journeys | Typical size | Time per addition |
+|---|---|---:|---|
+| `int` | Overflows in paise | 4 bytes | O(1) |
+| `long long` | Stores exact total | 8 bytes | O(1) |
+| `double` | Supports large values, but decimal fractions may be approximate | 8 bytes | O(1) |
 
-    for (int i = 0; i < 8; i++) {
-        bool ok = travel(zones[i], hours[i],
-                         balances[i], fare);
+All three types perform addition in constant time. `long long` is preferred for storing total money in paise because it provides a wider integer range and exact whole-paise calculations.
 
-        cout << zones[i] << "     " << hours[i] << "     "
-             << balances[i] / 100.0 << "    ";
+## 5. Conclusion
 
-        if (fare >= 0)
-            cout << fare / 100.0 << "   ";
-        else
-            cout << "Invalid  ";
-
-        cout << (ok ? "Accepted" : "Rejected") << '\n';
-    }
-
-    long long balance = 10000;
-    cout << "\nFIVE JOURNEY TEST\n";
-
-    int z[] = {1, 2, 3, 1, 2};
-    int h[] = {9, 10, 17, 20, 14};
-    long long total = 0;
-
-    for (int i = 0; i < 5; i++) {
-        if (travel(z[i], h[i], balance, fare)) {
-            balance -= fare;
-            total += fare;
-        }
-    }
-
-    cout << "Total fare: Rs " << total / 100.0 << '\n';
-    cout << "Final balance: Rs " << balance / 100.0 << '\n';
-
-    cout
+The experiment shows that `int` is insufficient for the whole-network total in paise. `long long` is the safest choice for accumulating fares, while `double` may introduce small precision errors when decimal fractions are used. Exact integer-paise arithmetic is therefore recommended for the metro fare system.
