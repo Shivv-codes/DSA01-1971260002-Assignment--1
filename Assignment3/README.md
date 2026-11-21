@@ -1,5 +1,4 @@
-# Assignment 3
-
-This folder contains the 12 tasks for C++ Assignment 3.
-
-Each task will have its own folder containing the analysis, source code and required evidence.
+# Assignment 3 – CO3: Constructors, Destructors & Operator Overloading
+- **Repository:** `DSA01-<RegisterNumber>-Assignment3`
+- **Compile:** `g++ -std=c++17 -Wall -Wextra -fsanitize=address <file.cpp> -o app && ./app < input.txt`
+- **Structure:** `Task01`–`Task07` each containing C++ code, `input.txt`, and `output.txt`.
